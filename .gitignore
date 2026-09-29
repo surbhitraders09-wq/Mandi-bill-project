@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+backend/venv/
+backend/*.db
+backend/scratch_seed.db
+backend/encryption.key
+/encryption.key
+
+# Runtime logs (may contain sensitive portal/print data)
+backend/logs/
+backendlogs/
+
+# One-off dev helper script with local paths
+extract_valid.py
+jsout/
+
+# Node
+frontend/node_modules/
+
+# Env (never commit real credentials)
+.env
+.env.local
+backend/.env
+
+# OS
+.DS_Store
+Thumbs.db

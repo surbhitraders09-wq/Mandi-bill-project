@@ -1,0 +1,27 @@
+services:
+  app:
+    build: .
+    container_name: mandi-assistant
+    ports:
+      - "8000:8000"
+    environment:
+      # e-Mandi portal credentials (change me!)
+      MANDI_E_MANDI_USERNAME: ${MANDI_E_MANDI_USERNAME:-YOUR_TRADER_ID}
+      MANDI_E_MANDI_PASSWORD: ${MANDI_E_MANDI_PASSWORD:-YOUR_TRADER_PASSWORD}
+      MANDI_E_MANDI_PIN: ${MANDI_E_MANDI_PIN:-0000}
+      # Admin password + JWT secret (GENERATE a long random secret)
+      MANDI_ADMIN_PASSWORD: ${MANDI_ADMIN_PASSWORD:-admin123}
+      MANDI_SECRET_KEY: ${MANDI_SECRET_KEY:-change-me-please}
+      MANDI_DATABASE_URL: sqlite+aiosqlite:////app/data/mandi.db
+      # Mobile access: add your phone's local IP to CORS (JSON array)
+      MANDI_CORS_ORIGINS: ${MANDI_CORS_ORIGINS:-["http://localhost:5173","http://localhost:8000"]}
+    volumes:
+      - mandi-data:/app/data
+      - mandi-print:/app/app/print_output
+      - mandi-encryption:/app/encryption.key
+    restart: unless-stopped
+
+volumes:
+  mandi-data:
+  mandi-print:
+  mandi-encryption:

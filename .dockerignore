@@ -1,0 +1,27 @@
+# Git / editor
+.git
+.gitignore
+docs
+*.md
+
+# Python
+backend/venv
+backend/*.db
+backend/scratch_seed.db
+backend/encryption.key
+__pycache__
+*.pyc
+.pytest_cache
+
+# Node / build artifacts
+frontend/node_modules
+frontend/dist
+frontend/.vite
+
+# Env / secrets
+.env
+.env.local
+backend/.env
+
+# OS
+.DS_Store
