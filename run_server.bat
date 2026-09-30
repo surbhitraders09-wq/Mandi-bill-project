@@ -21,7 +21,7 @@ rem ---- ensure log dir exists ----
 if not exist "%LOG_DIR%" mkdir "%LOG_DIR%" 2>nul
 
 rem ---- bail if something already serves :8000 (idempotent) ----
-netstat -ano | findstr /R /C:":8000 .*LISTENING" >nul 2>&1
+netstat -ano | findstr /C:":8000" | findstr /C:"LISTENING" >nul 2>&1
 if not errorlevel 1 (
     echo %date% %time%  WARN  :8000 already in use - skipping>>"%LOG%"
     exit /b 0

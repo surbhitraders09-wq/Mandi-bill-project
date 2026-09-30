@@ -708,27 +708,48 @@ class AutomationService:
                             await db_log("INFO", f"Portal print: print window from existing pages -> {p.url}")
                             break
 
+                print_win_ok = True
                 if print_win is not None:
                     try:
                         await print_win.wait_for_load_state("domcontentloaded")
                         await db_log("INFO", f"Portal print: new print window opened -> {print_win.url}")
                         # 2.5s wait as the user instructed (window needs time to render)
                         await _portal_wait(print_win, 2500)
-                        # Print exactly ONE copy. We deliberately do NOT click a
-                        # "Print" button and do NOT probe cascade windows: doing
-                        # both earlier caused DOUBLE prints (the button itself
-                        # triggers window.print(), and a cascade auto-prints too).
-                        # With --kiosk-printing, a single window.print() call
-                        # auto-prints exactly one copy to the default printer.
-                        # Pre-scale to 95% so the whole bill fits ONE page.
-                        if self._popup_handler:
-                            await self._popup_handler.apply_print_scale(print_win)
-                        await print_win.evaluate("window.print()")
-                        await db_log("INFO", "Portal print: print triggered on new window")
-                        print_done = True
+                        # GUARD: only print if this window actually holds the bill's
+                        # printable page. When the portal session has expired the
+                        # window can settle on the LOGIN page (Trader.aspx) — printing
+                        # it would silently print the wrong page AND fake a "completed".
+                        final_url = getattr(print_win, "url", "") or ""
+                        if not any(k in final_url for k in ("IndBhugtanPrint", "IndPrint", "Print")):
+                            await db_log(
+                                "WARNING",
+                                f"Portal print: window is NOT the bill print page ({final_url}); "
+                                "no print was made (portal session likely expired)",
+                            )
+                            print_win_ok = False
+                        else:
+                            # Print exactly ONE copy. We deliberately do NOT click a
+                            # "Print" button and do NOT probe cascade windows: doing
+                            # both earlier caused DOUBLE prints (the button itself
+                            # triggers window.print(), and a cascade auto-prints too).
+                            # With --kiosk-printing, a single window.print() call
+                            # auto-prints exactly one copy to the default printer.
+                            # Pre-scale so the whole bill fits ONE page.
+                            if self._popup_handler:
+                                await self._popup_handler.apply_print_scale(print_win)
+                            await print_win.evaluate("window.print()")
+                            await db_log("INFO", "Portal print: print triggered on new window")
+                            print_done = True
                     except Exception as e:
                         await db_log("WARNING", f"Portal print: print window handling failed: {e}")
                         print_done = False
+                        print_win_ok = False
+
+                if not print_win_ok:
+                    raise AutomationError(
+                        "Portal opened the login/home page instead of the bill print page "
+                        "(session likely expired). No print was made — retry the bill."
+                    )
 
                 if print_done:
                     self._set_progress("प्रिंट पूर्ण!")
